@@ -1,8 +1,9 @@
 import { ref } from "vue";
 import axios from "axios";
+import { type Message } from "@/type";
 
 // API 本身不具有记忆功能 这里手动实现
-const messageHistoryList = ref([
+const messageHistoryList = ref<Message[]>([
   //   {
   //     role: "system",
   //     content:
@@ -18,122 +19,63 @@ export const useKimi = () => {
       content: input,
     });
 
-    axios
-      .post(
-        "/api/v1/chat/completions",
-        {
-          messages: messageHistoryList.value,
-          model: "moonshot-v1-8k",
-          temperature: 0.3,
-          stream: true,
-        },
-        {
-          responseType: "stream",
-          headers: {
-            Authorization:
-              "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
-          },
+    fetch("/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization:
+          "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+      },
+      body: JSON.stringify({
+        messages: messageHistoryList.value,
+        model: "moonshot-v1-8k",
+        temperature: 0.3,
+        stream: true,
+      }),
+    }).then((response: any) => {
+      const reader = response.body.getReader(); // 获取 ReadableStreamDefaultReader
+
+      // 定义一个 Uint8Array 来存储字节数据
+      const decoder = new TextDecoder(); // 将字节解码为文本
+
+      // 递归读取流数据
+      let result = "";
+
+      reader.read().then(function processText({ done, value }: any) {
+        if (done) {
+          console.log("Stream complete");
+          return;
         }
-      )
-      .then((response) => {
-        let data = "";
-        response.data.on("data", (chunk) => {
-          let line = chunk.toString().trim();
-          if (line === "") {
-            try {
-              let chunk = JSON.parse(data);
-              // 这里的处理逻辑可以替换成你的业务逻辑，打印仅是为了展示处理流程
-              let choice = chunk.choices[0];
-              let usage = choice.usage;
-              if (usage) {
-                console.log("total_tokens:", usage.total_tokens);
-              }
-              let delta = choice.delta;
-              let role = delta.role;
-              if (role) {
-                console.log("role:", role);
-              }
-              let content = delta.content;
-              if (content) {
-                console.log(content);
-              }
-            } catch (error) {
-              console.error("Error parsing JSON:", error);
-            }
-            data = ""; // 重置 data
-          } else if (line.startsWith("data: ")) {
-            data = line.substring(6);
-            // 当数据块内容为 [DONE] 时，则表明所有数据块已发送完毕，可断开网络连接
-            if (data === "[DONE]") {
-              response.data.destroy();
-            }
-          } else {
-            data += "\n" + line; // 我们仍然在追加内容时，为其添加一个换行符，因为这可能是该数据块有意将数据分行展示
-          }
+        // console.log("jjj=>", decoder.decode(value).replace("data:", ""));
+
+        // 解码并拼接数据块
+        result = decoder.decode(value, { stream: true });
+        // result = result.replace('data:', '');
+        // console.log("hhh=>", result); // 输出当前收到的数据
+        const objects = result
+          .split("\n")
+          .filter((line) => line.startsWith("data:")) // 只处理以 'data:' 开头的行
+          .map((line) => {
+            const jsonString = line.replace("data: ", ""); // 去掉 'data: ' 前缀
+            return JSON.parse(jsonString); // 解析为对象
+          });
+
+        console.log("dsa", objects);
+        let stringRes = "";
+        objects.forEach((item) => {
+          stringRes += item.choices[0].delta.content;
         });
+        console.log("res", stringRes);
+
+        // 继续读取
+        // reader.read().then(processText);
       });
-    // fetch("/api/v1/chat/completions", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization:
-    //       "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
-    //   },
-    //   body: JSON.stringify({
-    //     messages: messageHistoryList.value,
-    //     model: "moonshot-v1-8k",
-    //     temperature: 0.3,
-    //     stream: true,
-    //   }),
+    });
     // })
-    //   .then((response: any) => {
-    //     console.log("<<<", response);
-    //     let data = "";
-    //     response.data.on("data", (chunk: any) => {
-    //       let line = chunk.toString().trim();
-
-    //       // 接下来我们要处理三种不同的情况：
-    //       //   1. 如果当前行是空行，则表明前一个数据块已接收完毕（即前文提到的，通过两个换行符结束数据块传输），我们可以对该数据块进行反序列化，并打印出对应的 content 内容；
-    //       //   2. 如果当前行为非空行，且以 data: 开头，则表明这是一个数据块传输的开始，我们去除 data: 前缀后，首先判断是否是结束符 [DONE]，如果不是，将数据内容保存到 data 变量；
-    //       //   3. 如果当前行为非空行，但不以 data: 开头，则表明当前行仍然归属上一个正在传输的数据块，我们将当前行的内容追加到 data 变量尾部；
-
-    //       if (line === "") {
-    //         try {
-    //           let chunk = JSON.parse(data);
-    //           // 这里的处理逻辑可以替换成你的业务逻辑，打印仅是为了展示处理流程
-    //           let choice = chunk.choices[0];
-    //           let usage = choice.usage;
-    //           if (usage) {
-    //             console.log("total_tokens:", usage.total_tokens);
-    //           }
-    //           let delta = choice.delta;
-    //           let role = delta.role;
-    //           if (role) {
-    //             console.log("role:", role);
-    //           }
-    //           let content = delta.content;
-    //           if (content) {
-    //             console.log(content);
-    //           }
-    //         } catch (error) {
-    //           console.error("Error parsing JSON:", error);
-    //         }
-    //         data = ""; // 重置 data
-    //       } else if (line.startsWith("data: ")) {
-    //         data = line.substring(6);
-    //         // 当数据块内容为 [DONE] 时，则表明所有数据块已发送完毕，可断开网络连接
-    //         if (data === "[DONE]") {
-    //           response.data.destroy();
-    //         }
-    //       } else {
-    //         data += "\n" + line; // 我们仍然在追加内容时，为其添加一个换行符，因为这可能是该数据块有意将数据分行展示
-    //       }
-    //     });
-    //   })
-    //   .then(async (data) => {
-    //     // messageHistoryList.value.push(data.choices[0].message)
-    //   })
-    //   .catch((error) => console.error("Error:", error));
+    // .then(async (data) => {
+    //   // messageHistoryList.value.push(data.choices[0].message)
+    // })
+    // .catch((error) => console.error("Error:", error));
   }
   return {
     chat,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import IconSystem from "@/components/icons/IconSystem.vue";
 import IconUser from "@/components/icons/IconUser.vue";
-import { type Message } from "@/type.ts";
+import { type Message } from "@/type";
 
 interface Props {
   message: Message;
