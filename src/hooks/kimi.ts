@@ -32,44 +32,40 @@ export const useKimi = () => {
         temperature: 0.3,
         stream: true,
       }),
-    }).then((response: any) => {
-      const reader = response.body.getReader(); // 获取 ReadableStreamDefaultReader
-
-      // 定义一个 Uint8Array 来存储字节数据
-      const decoder = new TextDecoder(); // 将字节解码为文本
-
-      // 递归读取流数据
-      let result = "";
-
-      reader.read().then(function processText({ done, value }: any) {
-        if (done) {
-          console.log("Stream complete");
-          return;
-        }
-        // console.log("jjj=>", decoder.decode(value).replace("data:", ""));
-
-        // 解码并拼接数据块
-        result = decoder.decode(value, { stream: true });
-        // result = result.replace('data:', '');
-        // console.log("hhh=>", result); // 输出当前收到的数据
-        const objects = result
+    }).then(async (response: any) => {
+      messageHistoryList.value.push({
+        role: "assistant",
+        content: "",
+      });
+      console.log(
+        "dsadas",
+        messageHistoryList.value[messageHistoryList.value.length - 1]
+      );
+      const res = messageHistoryList.value[messageHistoryList.value.length - 1];
+      const reader = response.body
+        .pipeThrough(new TextDecoderStream())
+        .getReader();
+      while (true) {
+        var { value, done } = await reader.read();
+        if (done) break;
+        // value = value?.replace("undefined", "");
+        console.log("received data -", value);
+        const objects = value
           .split("\n")
-          .filter((line) => line.startsWith("data:")) // 只处理以 'data:' 开头的行
+          .filter((line) => line.startsWith("data: {")) // 只处理以 'data:' 开头的行
           .map((line) => {
             const jsonString = line.replace("data: ", ""); // 去掉 'data: ' 前缀
             return JSON.parse(jsonString); // 解析为对象
           });
-
         console.log("dsa", objects);
-        let stringRes = "";
-        objects.forEach((item) => {
-          stringRes += item.choices[0].delta.content;
-        });
-        console.log("res", stringRes);
 
-        // 继续读取
-        // reader.read().then(processText);
-      });
+        objects.forEach((item) => {
+          res.content += item.choices[0].delta.content;
+        });
+        console.log("res", messageHistoryList.value);
+
+        // output += value?.replace("undefined", "");
+      }
     });
     // })
     // .then(async (data) => {
