@@ -2,12 +2,17 @@
 import IconSystem from "@/components/icons/IconSystem.vue";
 import IconUser from "@/components/icons/IconUser.vue";
 import { type Message } from "@/type";
+import { onMounted, watch } from "vue";
+import { MdPreview, MdCatalog } from "md-editor-v3";
+import "md-editor-v3/lib/preview.css";
 
 interface Props {
   message: Message;
 }
 
 defineProps<Props>();
+
+const scrollElement = document.documentElement;
 </script>
 
 <template>
@@ -20,7 +25,17 @@ defineProps<Props>();
     </div>
     <div class="content">
       <div class="text" style="max-width: 100%; word-wrap: break-all">
-        {{ message.content }}
+        <span v-if="message.role === 'user'">{{ message.content }}</span>
+        <MdPreview
+          v-if="message.role !== 'user'"
+          editorId="preview-only"
+          :modelValue="message.content"
+        />
+        <MdCatalog
+          v-if="message.role !== 'user'"
+          editorId="preview-only"
+          :scrollElement="scrollElement"
+        />
       </div>
     </div>
   </div>

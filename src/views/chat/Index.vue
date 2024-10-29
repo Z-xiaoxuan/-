@@ -5,37 +5,35 @@ import IconSend from "@/components/icons/IconSend.vue";
 import { useKimi } from "@/hooks/kimi";
 
 const { chat, messageHistoryList } = useKimi();
-const messageList = ref([
-  {
-    role: "assistant",
-    content:
-      "Hi，我是空天AI～ /n 很高兴遇见你！你可以问我一切有关无人机领域的问题，我来帮你解答！",
-  },
-  {
-    role: "user",
-    content:
-      "Hi，我是空天AI～ /n 很高兴遇见你！你可以问我一切有关无人机领域的问题，我来帮你解答！",
-  },
-]);
 
 const textarea2 = ref("");
+const chatRef = ref();
 
 const handleSend = () => {
-  console.log("dsadsa", textarea2.value);
-  //   messageList.value.push({
-  //     type: "self",
-  //     value: textarea2.value,
-  //   });
-  //   textarea2.value = "";chat
   chat(textarea2.value);
   textarea2.value = "";
 };
+
+function autoScroll() {
+  chatRef.value.scrollTo({
+    top: 1000,
+    left: 0,
+    behaver: "smooth",
+  });
+  // 请求下一帧动画
+  requestAnimationFrame(autoScroll);
+}
+
+// 启动自动滚动
+onMounted(() => {
+  // autoScroll();
+});
 </script>
 
 <template>
   <div class="chat">
     <div class="main">
-      <div class="chat-box">
+      <div ref="chatRef" class="chat-box">
         <Message v-for="item in messageHistoryList" :message="item"></Message>
       </div>
       <div class="input">
@@ -90,6 +88,7 @@ const handleSend = () => {
         resize: none;
         scrollbar-width: thin; /* 细滚动条 */
       }
+
       textarea::placeholder {
         color: #747cbc;
         font-weight: 600;
@@ -109,8 +108,19 @@ const handleSend = () => {
       height: calc(100% - 60px);
       padding: 0 50px;
       overflow: auto;
-      //   background-color: black;
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
   }
+}
+:deep(.el-textarea__inner) {
+  box-shadow: 0 !important;
+}
+:deep(.el-textarea__inner:hover) {
+  box-shadow: 0 !important;
+}
+:deep(.el-textarea__inner:focus) {
+  box-shadow: 0 !important;
 }
 </style>

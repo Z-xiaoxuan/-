@@ -52,14 +52,14 @@ export const useKimi = () => {
         console.log("received data -", value);
         const objects = value
           .split("\n")
-          .filter((line) => line.startsWith("data: {")) // 只处理以 'data:' 开头的行
-          .map((line) => {
+          .filter((line: any) => line.startsWith("data: {")) // 只处理以 'data:' 开头的行
+          .map((line: any) => {
             const jsonString = line.replace("data: ", ""); // 去掉 'data: ' 前缀
             return JSON.parse(jsonString); // 解析为对象
           });
         console.log("dsa", objects);
 
-        objects.forEach((item) => {
+        objects.forEach((item: any) => {
           res.content += item.choices[0].delta.content;
         });
         console.log("res", messageHistoryList.value);
