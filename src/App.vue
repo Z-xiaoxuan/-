@@ -8,7 +8,7 @@ import { RouterView } from "vue-router";
     <Navbar />
     <div class="router">
       <router-view v-slot="{ Component }">
-        <transition>
+        <transition appear mode="out-in">
           <component :is="Component" />
         </transition>
       </router-view>
@@ -28,13 +28,13 @@ import { RouterView } from "vue-router";
     background: linear-gradient(180deg, #acece8 0%, #5c66b2 100%);
   }
 }
-// .v-enter-active,
-// .v-leave-active {
-//   transition: opacity 0.5s ease;
-// }
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.3s ease;
+}
 
-// .v-enter-from,
-// .v-leave-to {
-//   opacity: 0;
-// }
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
 </style>

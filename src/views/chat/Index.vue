@@ -37,17 +37,11 @@ onMounted(() => {
         <Message v-for="item in messageHistoryList" :message="item"></Message>
       </div>
       <div class="input">
-        <!-- <textarea
-          resize="none"
-          :value="textarea2"
-          placeholder="在这里输入..."
-          rows="1"
-        ></textarea> -->
         <el-input
           resize="none"
           v-model="textarea2"
           style="flex: 1"
-          autosize
+          :autosize="{ minRows: 1, maxRows: 2 }"
           type="textarea"
           placeholder="在这里输入..."
           @keydown.enter.prevent="handleSend"
@@ -115,12 +109,16 @@ onMounted(() => {
   }
 }
 :deep(.el-textarea__inner) {
-  box-shadow: 0 !important;
+  box-shadow: 0 0 0 transparent;
 }
 :deep(.el-textarea__inner:hover) {
-  box-shadow: 0 !important;
+  box-shadow: 0 0 0 transparent;
 }
 :deep(.el-textarea__inner:focus) {
-  box-shadow: 0 !important;
+  box-shadow: 0 0 0 transparent;
+}
+.el-textarea {
+  box-shadow: 0 0 0 transparent;
+  border: 0;
 }
 </style>
