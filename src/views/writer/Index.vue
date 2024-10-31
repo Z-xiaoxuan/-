@@ -5,6 +5,11 @@ import IconHistory from "@/components/icons/IconHistory.vue";
 import IconHistoryActive from "@/components/icons/IconHistoryActive.vue";
 import List from "./components/List.vue";
 import { ref, computed, markRaw } from "vue";
+import { useKimi } from "@/hooks/kimi";
+import { MdPreview, MdCatalog } from "md-editor-v3";
+import "md-editor-v3/lib/preview.css";
+
+const { fileChat, filesAnsly } = useKimi();
 
 const selectList = ref([
   {
@@ -33,6 +38,7 @@ const handleClick = (value: string) => {
     }
   });
 };
+const scrollElement = document.documentElement;
 </script>
 
 <template>
@@ -50,7 +56,10 @@ const handleClick = (value: string) => {
     <div class="item">
       <List :active="activeItem?.value" />
     </div>
-    <div class="item"></div>
+    <div class="item">
+      <MdPreview editorId="preview-only" :modelValue="filesAnsly" />
+      <MdCatalog editorId="preview-only" :scrollElement="scrollElement" />
+    </div>
   </div>
 </template>
 

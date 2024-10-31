@@ -1,15 +1,35 @@
 import { ref } from "vue";
 import axios from "axios";
 import { type Message } from "@/type";
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+  baseURL: "https://api.moonshot.cn/v1",
+  dangerouslyAllowBrowser: true,
+});
+
+interface FileUploadResponse {
+  id: string; //String;
+  object: "file";
+  bytes: number; //291730;
+  created_at: number; // 1730385813;
+  filename: string; //"result_xvvmXK (1).jpg";
+  purpose: string; //"file-extract";
+  status: string; //"ok";
+  status_details: string; // string "";
+}
 
 // API 本身不具有记忆功能 这里手动实现
 const messageHistoryList = ref<Message[]>([
-  //   {
-  //     role: "system",
-  //     content:
-  //       "你是 Kimi，由 Moonshot AI 提供的人工智能助手，你更擅长中文和英文的对话。你会为用户提供安全，有帮助，准确的回答。同时，你会拒绝一切涉及恐怖主义，种族歧视，黄色暴力等问题的回答。Moonshot AI 为专有名词，不可翻译成其他语言。",
-  //   },
+  {
+    role: "assistant",
+    content:
+      "Hi,我是空天AI~。<br> 很高兴遇见你！你可以问我一切有关无人机领域的问题，我来帮你解答。",
+  },
 ]);
+
+const filesAnsly = ref("");
 
 export const useKimi = () => {
   async function chat(input: string) {
@@ -73,8 +93,90 @@ export const useKimi = () => {
     // })
     // .catch((error) => console.error("Error:", error));
   }
+
+  async function fileChat(file: any) {
+    const formData = new FormData();
+    formData.append("file", file);
+    fetch("/api/v1/files", {
+      method: "POST",
+      headers: {
+        Authorization:
+          "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+      },
+      body: formData,
+    }).then(async (res: any) => {
+      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+      let resRes: any;
+      while (true) {
+        var { value, done } = await reader.read();
+        if (done) break;
+        console.log("aaaa", JSON.parse(value));
+        resRes = JSON.parse(value);
+      }
+      const fileUploadRes: FileUploadResponse = res as any;
+
+      console.log("file", res);
+
+      // let file_content = await (await client.files.content(resRes.id)).text();
+      // console.log("000", file_content);
+      fetch(`/api/v1/files/${resRes.id}/content`, {
+        method: "GET",
+        headers: {
+          Authorization:
+            "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+        },
+      }).then(async (res: any) => {
+        const reader = res.body
+          .pipeThrough(new TextDecoderStream())
+          .getReader();
+        while (true) {
+          var { value, done } = await reader.read();
+          if (done) break;
+          console.log("bbbb", JSON.parse(value));
+          fetch("/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization:
+                "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+            },
+            body: JSON.stringify({
+              messages: [
+                {
+                  role: "system",
+                  content: JSON.parse(value).content,
+                },
+                {
+                  role: "user",
+                  content: "帮我分析一下，多大的概率可以找到工作？",
+                },
+              ],
+              model: "moonshot-v1-8k",
+              temperature: 0.3,
+            }),
+          }).then(async (res: any) => {
+            const reader = res.body
+              .pipeThrough(new TextDecoderStream())
+              .getReader();
+            while (true) {
+              var { value, done } = await reader.read();
+              if (done) break;
+              console.log("最后的结果", JSON.parse(value));
+              console.log(
+                "最后的结果lalala",
+                JSON.parse(value).choices[0].message.content
+              );
+              filesAnsly.value = JSON.parse(value).choices[0].message.content;
+            }
+          });
+        }
+      });
+    });
+  }
   return {
     chat,
+    fileChat,
+    filesAnsly,
     messageHistoryList,
   };
 };

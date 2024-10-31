@@ -7,6 +7,7 @@ import IconDownload from "@/components/icons/IconDownload.vue";
 import IconDownloadActive from "@/components/icons/IconDownloadActive.vue";
 import Menu from "./Menu.vue";
 import { ref } from "vue";
+import { useKimi } from "@/hooks/kimi";
 // import type { UploadProgressEvent } from "element-plus";
 
 defineProps({
@@ -15,6 +16,8 @@ defineProps({
   },
 });
 
+const { fileChat } = useKimi();
+
 const fileList = ref([]);
 
 const isMouseDown = ref(false);
@@ -22,6 +25,7 @@ const handleUpload = (event: Event) => {
   const uploadDom = event.target;
   const selectFileList = uploadDom.files as any;
   console.log("dsa", selectFileList);
+  fileChat(selectFileList[0]);
   //   this.selectedFile = event.target.files[0];
   //   if (this.selectedFile) {
   //     this.fileDetails = {
