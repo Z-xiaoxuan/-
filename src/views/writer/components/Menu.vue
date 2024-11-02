@@ -1,15 +1,18 @@
 <script setup lang="ts">
+import { ref, onMounted } from "vue";
+import FileItem from "./FileItem.vue";
+import { type FileInfo } from "@/type";
 const tableHeaderList = [
   { label: "素材名称", width: 2 },
   { label: "上传日期", width: 2 },
   { label: "素材类型", width: 1 },
   { label: "大小", width: 1 },
 ];
-defineProps({
-  fileList: {
-    type: Array,
-  },
-});
+
+interface Props {
+  files: FileInfo[];
+}
+defineProps<Props>();
 </script>
 
 <template>
@@ -25,14 +28,7 @@ defineProps({
     </div>
 
     <div class="tableBody">
-      <div class="table-item" v-for="item in fileList">
-        <div class="name" :style="{ flex: 2 }">{{ item.name }}</div>
-        <div class="date" :style="{ flex: 2 }">24/10/45</div>
-        <div class="type" :style="{ flex: 1 }">{{ item.type }}</div>
-        <div class="size" :style="{ flex: 1 }">
-          {{ (item.size / 1024).toFixed(0) }} KB
-        </div>
-      </div>
+      <FileItem v-for="item in files" :key="item.name" :file="item" />
     </div>
   </div>
 </template>
@@ -59,19 +55,7 @@ defineProps({
     }
   }
   .tableBody {
-    .table-item {
-      display: flex;
-      height: 22px;
-      font-size: 14px;
-      align-items: center;
-      letter-spacing: 1px;
-      gap: 10px;
-      .name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-    }
+    width: 100%;
   }
 }
 </style>

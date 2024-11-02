@@ -1,6 +1,6 @@
 import { ref } from "vue";
 import axios from "axios";
-import { type Message } from "@/type";
+import { type Message, type FileInfo } from "@/type";
 import OpenAI from "openai";
 
 const client = new OpenAI({
@@ -30,6 +30,9 @@ const messageHistoryList = ref<Message[]>([
 ]);
 
 const filesAnsly = ref("");
+const fileList = ref<FileInfo[]>([]);
+const fileContentMessage = ref<{ role: "system"; content: any }[]>([]);
+const generateLoading = ref(false);
 
 export const useKimi = () => {
   async function chat(input: string) {
@@ -92,6 +95,114 @@ export const useKimi = () => {
     //   // messageHistoryList.value.push(data.choices[0].message)
     // })
     // .catch((error) => console.error("Error:", error));
+  }
+
+  async function uploadFileList(files: any) {
+    // 循环上传文件
+    for (let i = 0; i < files.length; i++) {
+      fileList.value.push({
+        name: files[i].name,
+        type: files[i].type,
+        size: files[i].size,
+        id: "",
+      });
+      const formData = new FormData();
+      formData.append("file", files[i]);
+      fetch("/api/v1/files", {
+        method: "POST",
+        headers: {
+          Authorization:
+            "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+        },
+        body: formData,
+      }).then(async (res: any) => {
+        const reader = res.body
+          .pipeThrough(new TextDecoderStream())
+          .getReader();
+        let resRes: FileUploadResponse;
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          console.log("aaaa", JSON.parse(value));
+          resRes = JSON.parse(value);
+          // 拿到上传的ID
+          fileList.value[i].id = resRes.id;
+        }
+      });
+    }
+  }
+
+  function generateFilesAnalyze() {
+    // 循环拿到上传后对齐的文件
+    generateLoading.value = true;
+    for (let i = 0; i < fileList.value.length; i++) {
+      if (fileList.value[i].id) {
+        fetch(`/api/v1/files/${fileList.value[i].id}/content`, {
+          method: "GET",
+          headers: {
+            Authorization:
+              "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+          },
+        }).then(async (res: any) => {
+          const reader = res.body
+            .pipeThrough(new TextDecoderStream())
+            .getReader();
+          while (true) {
+            var { value, done } = await reader.read();
+            if (done) break;
+
+            fileContentMessage.value.push({
+              role: "system",
+              content: JSON.parse(value).content,
+            });
+            // 最后一个文件对气后，开始问答
+            if (fileList.value.length - 1 === i) {
+              fetch("/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization:
+                    "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+                },
+                body: JSON.stringify({
+                  messages: [
+                    ...fileContentMessage.value,
+                    {
+                      role: "user",
+                      content: "帮我总结以上的文件内容",
+                    },
+                  ],
+                  model: "moonshot-v1-8k",
+                  temperature: 0.3,
+                  stream: true,
+                }),
+              }).then(async (res: any) => {
+                const reader = res.body
+                  .pipeThrough(new TextDecoderStream())
+                  .getReader();
+                while (true) {
+                  generateLoading.value = false;
+                  var { value, done } = await reader.read();
+                  if (done) break;
+                  const objects = value
+                    .split("\n")
+                    .filter((line: any) => line.startsWith("data: {")) // 只处理以 'data:' 开头的行
+                    .map((line: any) => {
+                      const jsonString = line.replace("data: ", ""); // 去掉 'data: ' 前缀
+                      return JSON.parse(jsonString); // 解析为对象
+                    });
+                  console.log("dsa", objects);
+
+                  objects.forEach((item: any) => {
+                    filesAnsly.value += item.choices[0].delta.content;
+                  });
+                }
+              });
+            }
+          }
+        });
+      }
+    }
   }
 
   async function fileChat(file: any) {
@@ -176,6 +287,10 @@ export const useKimi = () => {
   return {
     chat,
     fileChat,
+    uploadFileList,
+    generateFilesAnalyze,
+    generateLoading,
+    fileList,
     filesAnsly,
     messageHistoryList,
   };

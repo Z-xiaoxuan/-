@@ -16,32 +16,13 @@ defineProps({
   },
 });
 
-const { fileChat } = useKimi();
-
-const fileList = ref([]);
+const { uploadFileList, fileList } = useKimi();
 
 const isMouseDown = ref(false);
 const handleUpload = (event: Event) => {
   const uploadDom = event.target;
   const selectFileList = uploadDom.files as any;
-  console.log("dsa", selectFileList);
-  fileChat(selectFileList[0]);
-  //   this.selectedFile = event.target.files[0];
-  //   if (this.selectedFile) {
-  //     this.fileDetails = {
-  //       name: this.selectedFile.name,
-  //       type: this.selectedFile.type,
-  //       size: this.selectedFile.size,
-  //     };
-  //   }
-  for (let i = 0; i < selectFileList.length; i++) {
-    fileList.value.push({
-      name: selectFileList[i].name,
-      type: selectFileList[i].type,
-      size: selectFileList[i].size,
-    });
-  }
-  console.log("dsa", fileList.value);
+  uploadFileList(selectFileList);
 };
 </script>
 
@@ -91,7 +72,7 @@ const handleUpload = (event: Event) => {
       </div>
     </div>
     <div class="body">
-      <Menu :fileList="fileList" />
+      <Menu :files="fileList" />
     </div>
   </div>
 </template>

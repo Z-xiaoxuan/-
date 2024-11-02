@@ -9,7 +9,8 @@ import { useKimi } from "@/hooks/kimi";
 import { MdPreview, MdCatalog } from "md-editor-v3";
 import "md-editor-v3/lib/preview.css";
 
-const { fileChat, filesAnsly } = useKimi();
+const { fileChat, filesAnsly, generateFilesAnalyze, generateLoading } =
+  useKimi();
 
 const selectList = ref([
   {
@@ -56,7 +57,26 @@ const scrollElement = document.documentElement;
     <div class="item">
       <List :active="activeItem?.value" />
     </div>
-    <div class="item">
+    <div class="item" style="overflow: auto; position: relative">
+      <el-button
+        v-if="!filesAnsly"
+        @click="generateFilesAnalyze"
+        size="large"
+        type="primary"
+        style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          padding: 30px 60px;
+          border-radius: 100px;
+          font-size: 24px;
+          background-color: #273075;
+        "
+        round
+        :loading="generateLoading"
+        >Ai总结</el-button
+      >
       <MdPreview editorId="preview-only" :modelValue="filesAnsly" />
       <MdCatalog editorId="preview-only" :scrollElement="scrollElement" />
     </div>
