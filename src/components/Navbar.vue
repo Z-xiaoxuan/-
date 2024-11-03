@@ -3,6 +3,7 @@ import { useRouter } from "vue-router";
 import homeIcon from "@/assets/home.png";
 import writerIcon from "@/assets/writer.png";
 import ChatIcon from "@/assets/chat.png";
+import IconSystem from "@/components/icons/IconSystem.vue";
 
 const router = useRouter();
 const menu = [
@@ -29,7 +30,10 @@ const handleClick = (routerName: string) => {
 
 <template>
   <nav>
-    <div class="title">空天产业AI交互平台</div>
+    <div class="title">
+      <IconSystem style="height: 40px"></IconSystem
+      ><span style="position: relative; left: -10px">空天产业AI交互平台</span>
+    </div>
     <div class="menu">
       <div class="item" @click="handleClick(item.value)" v-for="item in menu">
         <template v-if="$route.name === item.value">
@@ -57,6 +61,8 @@ nav {
     color: #fff;
     font-weight: 600;
     letter-spacing: 2px;
+    display: flex;
+    align-items: center;
   }
   .menu {
     display: flex;

@@ -6,6 +6,7 @@ import IconUploadActive from "@/components/icons/IconUploadActive.vue";
 import IconDownload from "@/components/icons/IconDownload.vue";
 import IconDownloadActive from "@/components/icons/IconDownloadActive.vue";
 import Menu from "./Menu.vue";
+import DiGao from "./DiGao.vue";
 import { ref } from "vue";
 import { useKimi } from "@/hooks/kimi";
 // import type { UploadProgressEvent } from "element-plus";
@@ -21,7 +22,7 @@ const { uploadFileList, fileList } = useKimi();
 const isMouseDown = ref(false);
 const handleUpload = (event: Event) => {
   const uploadDom = event.target;
-  const selectFileList = uploadDom.files as any;
+  const selectFileList = (uploadDom as any).files;
   uploadFileList(selectFileList);
 };
 </script>
@@ -72,7 +73,8 @@ const handleUpload = (event: Event) => {
       </div>
     </div>
     <div class="body">
-      <Menu :files="fileList" />
+      <Menu v-if="active === 'menu'" :files="fileList" />
+      <DiGao v-else />
     </div>
   </div>
 </template>
@@ -115,6 +117,11 @@ const handleUpload = (event: Event) => {
   .body {
     height: calc(100% - 40px);
     width: 100%;
+    overflow: auto;
+    //   scrollbar-width: thin;
+    &::-webkit-scrollbar {
+      display: block;
+    }
   }
 }
 </style>

@@ -4,7 +4,7 @@ import IconMenuActive from "@/components/icons/MenuActive.vue";
 import IconHistory from "@/components/icons/IconHistory.vue";
 import IconHistoryActive from "@/components/icons/IconHistoryActive.vue";
 import List from "./components/List.vue";
-import { ref, computed, markRaw } from "vue";
+import { ref, computed, markRaw, onMounted } from "vue";
 import { useKimi } from "@/hooks/kimi";
 import { MdPreview, MdCatalog } from "md-editor-v3";
 import "md-editor-v3/lib/preview.css";
@@ -30,6 +30,25 @@ const activeItem = computed(() => {
   return selectList.value.find((item) => item.isActive);
 });
 
+const chatRef = ref();
+const isWheel = ref(false);
+
+function autoScroll() {
+  // if (
+  //   boxRef.value.scrollHeight - boxRef.value.scrollTop ===
+  //   boxRef.value.clientHeight
+  // ) {
+  //   isWheel.value = false; // 已经滚动到底部，无需继续滚动
+  // }
+  if (isWheel.value) return;
+  chatRef.value.scrollIntoView({ behavior: "smooth", block: "end" });
+  // 请求下一帧动画
+  requestAnimationFrame(autoScroll);
+}
+const handleScroll = () => {
+  isWheel.value = true;
+};
+
 const handleClick = (value: string) => {
   selectList.value.forEach((item) => {
     if (item.value === value) {
@@ -40,6 +59,10 @@ const handleClick = (value: string) => {
   });
 };
 const scrollElement = document.documentElement;
+
+onMounted(() => {
+  autoScroll();
+});
 </script>
 
 <template>
@@ -57,7 +80,11 @@ const scrollElement = document.documentElement;
     <div class="item">
       <List :active="activeItem?.value" />
     </div>
-    <div class="item" style="overflow: auto; position: relative">
+    <div
+      class="item ai"
+      style="overflow: auto; position: relative"
+      @wheel="handleScroll"
+    >
       <el-button
         v-if="!filesAnsly"
         @click="generateFilesAnalyze"
@@ -77,8 +104,10 @@ const scrollElement = document.documentElement;
         :loading="generateLoading"
         >Ai总结</el-button
       >
-      <MdPreview editorId="preview-only" :modelValue="filesAnsly" />
-      <MdCatalog editorId="preview-only" :scrollElement="scrollElement" />
+      <div ref="chatRef">
+        <MdPreview editorId="preview-only" :modelValue="filesAnsly" />
+        <MdCatalog editorId="preview-only" :scrollElement="scrollElement" />
+      </div>
     </div>
   </div>
 </template>
@@ -119,5 +148,11 @@ const scrollElement = document.documentElement;
 .active {
   box-shadow: 0px 4px 4px 0px #00000040;
   background: #273075;
+}
+.ai {
+  // &::-webkit-scrollbar {
+  //   display: block;
+  // }
+  scrollbar-width: thin;
 }
 </style>

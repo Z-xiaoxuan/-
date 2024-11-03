@@ -71,8 +71,7 @@ export const useKimi = () => {
       while (true) {
         var { value, done } = await reader.read();
         if (done) break;
-        // value = value?.replace("undefined", "");
-        console.log("received data -", value);
+
         const objects = value
           .split("\n")
           .filter((line: any) => line.startsWith("data: {")) // 只处理以 'data:' 开头的行
@@ -80,21 +79,13 @@ export const useKimi = () => {
             const jsonString = line.replace("data: ", ""); // 去掉 'data: ' 前缀
             return JSON.parse(jsonString); // 解析为对象
           });
-        console.log("dsa", objects);
 
         objects.forEach((item: any) => {
+          if (item.choices[0].finish_reason) return;
           res.content += item.choices[0].delta.content;
         });
-        console.log("res", messageHistoryList.value);
-
-        // output += value?.replace("undefined", "");
       }
     });
-    // })
-    // .then(async (data) => {
-    //   // messageHistoryList.value.push(data.choices[0].message)
-    // })
-    // .catch((error) => console.error("Error:", error));
   }
 
   async function uploadFileList(files: any) {
@@ -191,9 +182,9 @@ export const useKimi = () => {
                       const jsonString = line.replace("data: ", ""); // 去掉 'data: ' 前缀
                       return JSON.parse(jsonString); // 解析为对象
                     });
-                  console.log("dsa", objects);
 
                   objects.forEach((item: any) => {
+                    if (item.choices[0].finish_reason) return;
                     filesAnsly.value += item.choices[0].delta.content;
                   });
                 }
