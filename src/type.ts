@@ -8,5 +8,6 @@ export interface FileInfo {
   type: string;
   size: number;
   /**文件上传后拿到的ID */
-  id: string;
+  id: any;
+  fn?: any;
 }

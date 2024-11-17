@@ -35,35 +35,37 @@ const fileContentMessage = ref<{ role: "system"; content: any }[]>([]);
 const generateLoading = ref(false);
 
 export const useKimi = () => {
+  // 我们将用户最新的问题构造成一个 message（role=user），并添加到 messages 的尾部
+
   async function chat(input: string) {
-    // 我们将用户最新的问题构造成一个 message（role=user），并添加到 messages 的尾部
     messageHistoryList.value.push({
       role: "user",
       content: input,
     });
-
-    fetch("/api/v1/chat/completions", {
+    fetch("https://api.fastgpt.in/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization:
-          "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+          "Bearer fastgpt-qDxClbMzQYZCR0QcwusKFmGNHvKfGtI5pDjK4uHEkSMsFTr89f4kc",
       },
       body: JSON.stringify({
-        messages: messageHistoryList.value,
-        model: "moonshot-v1-8k",
-        temperature: 0.3,
+        chatId: new Date().getTime().toString(),
         stream: true,
+        detail: false,
+        messages: [
+          {
+            content: `${input}（答案结尾显示pdf来源,如果问题与其无关，可以不显示）`,
+            role: "user",
+          },
+        ],
       }),
     }).then(async (response: any) => {
       messageHistoryList.value.push({
         role: "assistant",
         content: "",
       });
-      console.log(
-        "dsadas",
-        messageHistoryList.value[messageHistoryList.value.length - 1]
-      );
+
       const res = messageHistoryList.value[messageHistoryList.value.length - 1];
       const reader = response.body
         .pipeThrough(new TextDecoderStream())
@@ -71,7 +73,6 @@ export const useKimi = () => {
       while (true) {
         var { value, done } = await reader.read();
         if (done) break;
-
         const objects = value
           .split("\n")
           .filter((line: any) => line.startsWith("data: {")) // 只处理以 'data:' 开头的行
@@ -79,8 +80,8 @@ export const useKimi = () => {
             const jsonString = line.replace("data: ", ""); // 去掉 'data: ' 前缀
             return JSON.parse(jsonString); // 解析为对象
           });
-
         objects.forEach((item: any) => {
+          if (!item.choices) return;
           if (item.choices[0].finish_reason) return;
           res.content += item.choices[0].delta.content;
         });
@@ -96,104 +97,153 @@ export const useKimi = () => {
         type: files[i].type,
         size: files[i].size,
         id: "",
+        fn: function () {
+          console.log("this", this);
+          const randomNum = Math.floor(Math.random() * 10) + 1;
+          setTimeout(() => {
+            this.id = new Date().getTime().toString();
+          }, randomNum * 1000);
+        },
       });
+      fileList.value[fileList.value.length - 1].fn();
       const formData = new FormData();
       formData.append("file", files[i]);
-      fetch("/api/v1/files", {
-        method: "POST",
-        headers: {
-          Authorization:
-            "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
-        },
-        body: formData,
-      }).then(async (res: any) => {
-        const reader = res.body
-          .pipeThrough(new TextDecoderStream())
-          .getReader();
-        let resRes: FileUploadResponse;
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          console.log("aaaa", JSON.parse(value));
-          resRes = JSON.parse(value);
-          // 拿到上传的ID
-          fileList.value[i].id = resRes.id;
-        }
-      });
+
+      // fetch("/api/v1/files", {
+      //   method: "POST",
+      //   headers: {
+      //     Authorization:
+      //       "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+      //   },
+      //   body: formData,
+      // }).then(async (res: any) => {
+      //   const reader = res.body
+      //     .pipeThrough(new TextDecoderStream())
+      //     .getReader();
+      //   let resRes: FileUploadResponse;
+      //   while (true) {
+      //     const { value, done } = await reader.read();
+      //     if (done) break;
+      //     console.log("aaaa", JSON.parse(value));
+      //     resRes = JSON.parse(value);
+      //     // 拿到上传的ID
+      //     fileList.value[i].id = resRes.id;
+      //   }
+      // });
     }
   }
 
   function generateFilesAnalyze() {
     // 循环拿到上传后对齐的文件
+    // generateLoading.value = true;
+    // for (let i = 0; i < fileList.value.length; i++) {
+    //   if (fileList.value[i].id) {
+    //     fetch(`/api/v1/files/${fileList.value[i].id}/content`, {
+    //       method: "GET",
+    //       headers: {
+    //         Authorization:
+    //           "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+    //       },
+    //     }).then(async (res: any) => {
+    //       const reader = res.body
+    //         .pipeThrough(new TextDecoderStream())
+    //         .getReader();
+    //       while (true) {
+    //         var { value, done } = await reader.read();
+    //         if (done) break;
+    //         fileContentMessage.value.push({
+    //           role: "system",
+    //           content: JSON.parse(value).content,
+    //         });
+    //         // 最后一个文件对气后，开始问答
+    //         if (fileList.value.length - 1 === i) {
+    //           fetch("/api/v1/chat/completions", {
+    //             method: "POST",
+    //             headers: {
+    //               "Content-Type": "application/json",
+    //               Authorization:
+    //                 "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+    //             },
+    //             body: JSON.stringify({
+    //               messages: [
+    //                 ...fileContentMessage.value,
+    //                 {
+    //                   role: "user",
+    //                   content: "帮我总结以上的文件内容",
+    //                 },
+    //               ],
+    //               model: "moonshot-v1-8k",
+    //               temperature: 0.3,
+    //               stream: true,
+    //             }),
+    //           }).then(async (res: any) => {
+    //             const reader = res.body
+    //               .pipeThrough(new TextDecoderStream())
+    //               .getReader();
+    //             while (true) {
+    //               generateLoading.value = false;
+    //               var { value, done } = await reader.read();
+    //               if (done) break;
+    //               const objects = value
+    //                 .split("\n")
+    //                 .filter((line: any) => line.startsWith("data: {")) // 只处理以 'data:' 开头的行
+    //                 .map((line: any) => {
+    //                   const jsonString = line.replace("data: ", ""); // 去掉 'data: ' 前缀
+    //                   return JSON.parse(jsonString); // 解析为对象
+    //                 });
+    //               objects.forEach((item: any) => {
+    //                 if (item.choices[0].finish_reason) return;
+    //                 filesAnsly.value += item.choices[0].delta.content;
+    //               });
+    //             }
+    //           });
+    //         }
+    //       }
+    //     });
+    //   }
+    // }
     generateLoading.value = true;
-    for (let i = 0; i < fileList.value.length; i++) {
-      if (fileList.value[i].id) {
-        fetch(`/api/v1/files/${fileList.value[i].id}/content`, {
-          method: "GET",
-          headers: {
-            Authorization:
-              "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+    fetch("https://api.fastgpt.in/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization:
+          "Bearer fastgpt-qDxClbMzQYZCR0QcwusKFmGNHvKfGtI5pDjK4uHEkSMsFTr89f4kc",
+      },
+      body: JSON.stringify({
+        chatId: "412412",
+        stream: true,
+        detail: false,
+        messages: [
+          {
+            content:
+              "请基于所提供的文献，撰写一篇关于无人机行业前景分析的专业报告。报告应包含：\n\n行业现状：无人机行业的市场规模、主 要应用领域和关键参与者。\n市场趋势：技术创新、市场需求变化和新兴应用场景。\n技术发展 ：无人机相关的新技术和研发方向。\n政策法规：影响行业 发展的政策、法规和标准。\n竞争格局：主要企业的竞争策略和市场份额分析。\n机会与挑战：行业面临的机遇、风险和挑战。\n未来展望：对无人机行业 未来发展的预测和建议。\n\n请提取并整合文献中的专业信息，用丰富的论据支持报告中的论点和数据，每个副标题下内容不少于 100 字。在报告末尾附上所有引用的参考文献列表。",
+            role: "user",
           },
-        }).then(async (res: any) => {
-          const reader = res.body
-            .pipeThrough(new TextDecoderStream())
-            .getReader();
-          while (true) {
-            var { value, done } = await reader.read();
-            if (done) break;
-
-            fileContentMessage.value.push({
-              role: "system",
-              content: JSON.parse(value).content,
-            });
-            // 最后一个文件对气后，开始问答
-            if (fileList.value.length - 1 === i) {
-              fetch("/api/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization:
-                    "Bearer sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
-                },
-                body: JSON.stringify({
-                  messages: [
-                    ...fileContentMessage.value,
-                    {
-                      role: "user",
-                      content: "帮我总结以上的文件内容",
-                    },
-                  ],
-                  model: "moonshot-v1-8k",
-                  temperature: 0.3,
-                  stream: true,
-                }),
-              }).then(async (res: any) => {
-                const reader = res.body
-                  .pipeThrough(new TextDecoderStream())
-                  .getReader();
-                while (true) {
-                  generateLoading.value = false;
-                  var { value, done } = await reader.read();
-                  if (done) break;
-                  const objects = value
-                    .split("\n")
-                    .filter((line: any) => line.startsWith("data: {")) // 只处理以 'data:' 开头的行
-                    .map((line: any) => {
-                      const jsonString = line.replace("data: ", ""); // 去掉 'data: ' 前缀
-                      return JSON.parse(jsonString); // 解析为对象
-                    });
-
-                  objects.forEach((item: any) => {
-                    if (item.choices[0].finish_reason) return;
-                    filesAnsly.value += item.choices[0].delta.content;
-                  });
-                }
-              });
-            }
-          }
+        ],
+      }),
+    }).then(async (response: any) => {
+      const reader = response.body
+        .pipeThrough(new TextDecoderStream())
+        .getReader();
+      while (true) {
+        generateLoading.value = false;
+        var { value, done } = await reader.read();
+        if (done) break;
+        const objects = value
+          .split("\n")
+          .filter((line: any) => line.startsWith("data: {")) // 只处理以 'data:' 开头的行
+          .map((line: any) => {
+            const jsonString = line.replace("data: ", ""); // 去掉 'data: ' 前缀
+            return JSON.parse(jsonString); // 解析为对象
+          });
+        objects.forEach((item: any) => {
+          if (!item.choices) return;
+          if (item.choices[0].finish_reason) return;
+          filesAnsly.value += item.choices[0].delta.content;
         });
       }
-    }
+    });
   }
 
   async function fileChat(file: any) {

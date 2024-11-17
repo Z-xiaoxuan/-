@@ -60,6 +60,11 @@ const handleClick = (value: string) => {
 };
 const scrollElement = document.documentElement;
 
+const handleRe = () => {
+  filesAnsly.value = "";
+  generateFilesAnalyze();
+};
+
 onMounted(() => {
   autoScroll();
 });
@@ -107,12 +112,25 @@ onMounted(() => {
       <div ref="chatRef">
         <MdPreview editorId="preview-only" :modelValue="filesAnsly" />
         <MdCatalog editorId="preview-only" :scrollElement="scrollElement" />
+        <div style="height: 50px">
+          <el-button
+            v-if="filesAnsly"
+            @click="handleRe"
+            :loading="generateLoading"
+            type="primary"
+            style="position: absolute; left: 50%; transform: translateX(-50%)"
+            >重新生成</el-button
+          >
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.md-editor-catalog {
+  display: none;
+}
 .writer {
   height: 100%;
   width: 100%;

@@ -19,13 +19,21 @@ onMounted(() => {
 
 <template>
   <div class="file-item">
-    <div v-if="!file.id">
-      <el-progress :text-inside="true" :percentage="percentage" />
+    <div style="position: relative" v-if="!file.id">
+      <el-progress
+        style="position: relative; top: 10px"
+        :text-inside="true"
+        :percentage="percentage"
+      />
     </div>
     <div v-else class="item">
       <div class="name" :style="{ flex: 2 }">{{ file.name }}</div>
-      <div class="date" :style="{ flex: 2 }">24/10/45</div>
-      <div class="type" :style="{ flex: 1 }">{{ file.type }}</div>
+      <div class="date" :style="{ flex: 2 }">
+        {{ new Date().toDateString() }}
+      </div>
+      <div class="type" :style="{ flex: 1 }">
+        {{ file.type.split("/").pop() }}
+      </div>
       <div class="size" :style="{ flex: 1 }">
         {{ (file.size / 1024).toFixed(0) }} KB
       </div>
@@ -35,6 +43,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .file-item {
+  position: relative;
   height: 22px;
   width: 100%;
   .item {
