@@ -33,6 +33,8 @@ const filesAnsly = ref("");
 const fileList = ref<FileInfo[]>([]);
 const fileContentMessage = ref<{ role: "system"; content: any }[]>([]);
 const generateLoading = ref(false);
+const selectArticle = ref(0);
+const digaoText = ref("");
 
 export const useKimi = () => {
   // 我们将用户最新的问题构造成一个 message（role=user），并添加到 messages 的尾部
@@ -202,6 +204,8 @@ export const useKimi = () => {
     //     });
     //   }
     // }
+    filesAnsly.value = "";
+    selectArticle.value = 0;
     generateLoading.value = true;
     fetch("https://api.fastgpt.in/api/v1/chat/completions", {
       method: "POST",
@@ -216,8 +220,7 @@ export const useKimi = () => {
         detail: false,
         messages: [
           {
-            content:
-              "请基于所提供的文献，撰写一篇关于无人机行业前景分析的专业报告。报告应包含：\n\n行业现状：无人机行业的市场规模、主 要应用领域和关键参与者。\n市场趋势：技术创新、市场需求变化和新兴应用场景。\n技术发展 ：无人机相关的新技术和研发方向。\n政策法规：影响行业 发展的政策、法规和标准。\n竞争格局：主要企业的竞争策略和市场份额分析。\n机会与挑战：行业面临的机遇、风险和挑战。\n未来展望：对无人机行业 未来发展的预测和建议。\n\n请提取并整合文献中的专业信息，用丰富的论据支持报告中的论点和数据，每个副标题下内容不少于 100 字。在报告末尾附上所有引用的参考文献列表。",
+            content: `请基于所提供的文献,${digaoText.value}。请提取并整合文献中的专业信息，用丰富的论据支持报告中的论点和数据，每个副标题下内容不少于 100 字。在报告末尾附上所有引用的参考文献列表。`,
             role: "user",
           },
         ],
@@ -330,6 +333,8 @@ export const useKimi = () => {
     fileChat,
     uploadFileList,
     generateFilesAnalyze,
+    digaoText,
+    selectArticle,
     generateLoading,
     fileList,
     filesAnsly,

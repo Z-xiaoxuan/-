@@ -4,6 +4,7 @@ import IconMenuActive from "@/components/icons/MenuActive.vue";
 import IconHistory from "@/components/icons/IconHistory.vue";
 import IconHistoryActive from "@/components/icons/IconHistoryActive.vue";
 import IconTry from "@/assets/reTry.svg";
+import IconEnter from "@/assets/enter.svg";
 import IconSystem from "@/assets/system.svg";
 import List from "./components/List.vue";
 import { ref, computed, markRaw, onMounted } from "vue";
@@ -11,8 +12,13 @@ import { useKimi } from "@/hooks/kimi";
 import { MdPreview, MdCatalog } from "md-editor-v3";
 import "md-editor-v3/lib/preview.css";
 
-const { fileChat, filesAnsly, generateFilesAnalyze, generateLoading } =
-  useKimi();
+const {
+  fileChat,
+  filesAnsly,
+  generateFilesAnalyze,
+  generateLoading,
+  digaoText,
+} = useKimi();
 
 const selectList = ref([
   {
@@ -63,9 +69,13 @@ const handleClick = (value: string) => {
 };
 const scrollElement = document.documentElement;
 
-const handleRe = () => {
-  filesAnsly.value = "";
-  generateFilesAnalyze();
+const handleGenerate = () => {
+  if ((filesAnsly.value = "")) {
+    generateFilesAnalyze();
+  } else {
+    filesAnsly.value = "";
+    generateFilesAnalyze();
+  }
 };
 
 onMounted(() => {
@@ -95,55 +105,25 @@ onMounted(() => {
     >
       <div class="input">
         <img :src="IconSystem" />
-        <el-input v-model="value" type="textarea" resize="none" rows="1" />
-        <div
-          style="
-            background-color: #273075;
-            height: 40px;
-            width: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-          "
+        <el-input
+          @keydown.enter.prevent="generateFilesAnalyze"
+          v-model="digaoText"
+          type="textarea"
+          resize="none"
+          rows="1"
+        />
+        <el-button
+          @click="handleGenerate"
+          style="height: 40px; width: 45px; padding: 0"
+          color="#273075"
         >
-          <img style="height: 80%" :src="IconTry" />
-        </div>
+          <img v-if="!filesAnsly" style="height: 20px" :src="IconEnter" />
+          <img v-else style="height: 30px" :src="IconTry" />
+        </el-button>
       </div>
-
-      <el-button
-        v-if="!filesAnsly"
-        @click="generateFilesAnalyze"
-        size="large"
-        type="primary"
-        style="
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          padding: 30px 60px;
-          border-radius: 100px;
-          font-size: 24px;
-          background-color: #273075;
-        "
-        round
-        :loading="generateLoading"
-        >Ai总结</el-button
-      >
-      <div ref="chatRef">
+      <div v-loading="generateLoading" ref="chatRef">
         <MdPreview editorId="preview-only" :modelValue="filesAnsly" />
         <MdCatalog editorId="preview-only" :scrollElement="scrollElement" />
-        <div style="height: 50px">
-          <el-button
-            v-if="filesAnsly"
-            @click="handleRe"
-            :loading="generateLoading"
-            type="primary"
-            style="position: absolute; left: 50%; transform: translateX(-50%)"
-            >重新生成</el-button
-          >
-        </div>
       </div>
     </div>
   </div>
@@ -190,12 +170,13 @@ onMounted(() => {
     border-radius: 10px;
     width: 90%;
     height: 60px;
-    border: 1px solid black;
+    color: #273075;
     padding: 4px;
     background-color: #fff;
     display: flex;
     align-items: center;
     cursor: pointer;
+    box-shadow: 2px 0 5px #5c66b2, -2px 0 5px #acece8;
     &::after {
       content: "";
       position: absolute;
