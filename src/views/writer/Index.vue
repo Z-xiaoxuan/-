@@ -3,6 +3,8 @@ import IconMenu from "@/components/icons/IconMenu.vue";
 import IconMenuActive from "@/components/icons/MenuActive.vue";
 import IconHistory from "@/components/icons/IconHistory.vue";
 import IconHistoryActive from "@/components/icons/IconHistoryActive.vue";
+import IconTry from "@/assets/reTry.svg";
+import IconSystem from "@/assets/system.svg";
 import List from "./components/List.vue";
 import { ref, computed, markRaw, onMounted } from "vue";
 import { useKimi } from "@/hooks/kimi";
@@ -26,6 +28,7 @@ const selectList = ref([
     activeIcon: markRaw(IconHistoryActive),
   },
 ]);
+const value = ref("");
 const activeItem = computed(() => {
   return selectList.value.find((item) => item.isActive);
 });
@@ -82,7 +85,7 @@ onMounted(() => {
         <component v-show="!item.isActive" :is="item.icon" />
       </div>
     </div>
-    <div class="item">
+    <div class="item" style="position: relative">
       <List :active="activeItem?.value" />
     </div>
     <div
@@ -90,6 +93,25 @@ onMounted(() => {
       style="overflow: auto; position: relative"
       @wheel="handleScroll"
     >
+      <div class="input">
+        <img :src="IconSystem" />
+        <el-input v-model="value" type="textarea" resize="none" rows="1" />
+        <div
+          style="
+            background-color: #273075;
+            height: 40px;
+            width: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+          "
+        >
+          <img style="height: 80%" :src="IconTry" />
+        </div>
+      </div>
+
       <el-button
         v-if="!filesAnsly"
         @click="generateFilesAnalyze"
@@ -162,6 +184,30 @@ onMounted(() => {
       flex: 1;
     }
   }
+  .input {
+    position: relative;
+    margin: 20px auto;
+    border-radius: 10px;
+    width: 90%;
+    height: 60px;
+    border: 1px solid black;
+    padding: 4px;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1; /* 放置在元素后面 */
+      background: linear-gradient(to right, #a8ff78, #78ffd6);
+      transform: scale(1.2);
+    }
+  }
 }
 .active {
   box-shadow: 0px 4px 4px 0px #00000040;
@@ -172,5 +218,18 @@ onMounted(() => {
   //   display: block;
   // }
   scrollbar-width: thin;
+}
+:deep(.el-textarea__inner) {
+  box-shadow: 0 0 0 transparent;
+}
+:deep(.el-textarea__inner:hover) {
+  box-shadow: 0 0 0 transparent;
+}
+:deep(.el-textarea__inner:focus) {
+  box-shadow: 0 0 0 transparent;
+}
+.el-textarea {
+  box-shadow: 0 0 0 transparent;
+  border: 0;
 }
 </style>

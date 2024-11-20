@@ -55,7 +55,7 @@ export const useKimi = () => {
         detail: false,
         messages: [
           {
-            content: `${input}（答案结尾显示pdf来源,如果问题与其无关，可以不显示）`,
+            content: `${input}（答案结尾显示信息来源）`,
             role: "user",
           },
         ],
