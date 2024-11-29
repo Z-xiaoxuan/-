@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
-import homeUrl from "@/assets/homeBg.png";
-import homeUrl2 from "@/assets/homeBg2.jpg";
+import homeUrl from "@/assets/homeBg.jpg";
 import homeUrl3 from "@/assets/homeBg3.jpg";
 import font from "@/assets/image1.png";
 import font2 from "@/assets/image2.png";

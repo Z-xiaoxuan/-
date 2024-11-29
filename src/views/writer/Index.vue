@@ -70,12 +70,22 @@ const handleClick = (value: string) => {
 const scrollElement = document.documentElement;
 
 const handleGenerate = () => {
+  if (digaoText.value === "") {
+    digaoText.value = "请帮我写一篇无人机行业前景分析报告";
+  }
   if ((filesAnsly.value = "")) {
     generateFilesAnalyze();
   } else {
     filesAnsly.value = "";
     generateFilesAnalyze();
   }
+};
+
+const handleEnter = () => {
+  if (digaoText.value === "") {
+    digaoText.value = "请帮我写一篇无人机行业前景分析报告";
+  }
+  generateFilesAnalyze();
 };
 
 onMounted(() => {
@@ -106,7 +116,8 @@ onMounted(() => {
       <div class="input">
         <img :src="IconSystem" />
         <el-input
-          @keydown.enter.prevent="generateFilesAnalyze"
+          placeholder="请帮我写一篇无人机行业前景分析报告"
+          @keydown.enter.prevent="handleEnter"
           v-model="digaoText"
           type="textarea"
           resize="none"
