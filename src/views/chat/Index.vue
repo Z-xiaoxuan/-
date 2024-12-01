@@ -1,10 +1,32 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, nextTick } from "vue";
+import { onMounted, ref, watch } from "vue";
 import Message from "./components/Message.vue";
 import IconSend from "@/components/icons/IconSend.vue";
 import { useKimi } from "@/hooks/kimi";
 
 const { chat, messageHistoryList } = useKimi();
+
+watch(
+  messageHistoryList,
+  () => {
+    console.log("改变了",messageHistoryList.value)
+    if (
+      boxRef.value.scrollHeight -
+        boxRef.value.scrollTop -
+        boxRef.value.clientHeight >
+      200
+    ) {
+      console.log("到底了");
+    } else {
+      setTimeout(() => {
+        chatRef.value.scrollIntoView({ behavior: "smooth", block: "end" });
+      });
+    }
+  },
+  {
+    deep: true,
+  }
+);
 
 const textarea2 = ref("");
 const chatRef = ref();
@@ -16,49 +38,15 @@ const handleSend = () => {
   textarea2.value = "";
   isWheel.value = false;
   setTimeout(() => {
-    autoScroll();
+    chatRef.value.scrollIntoView({ behavior: "smooth", block: "end" });
   });
 };
-
-function autoScroll() {
-  // if (
-  //   boxRef.value.scrollHeight - boxRef.value.scrollTop ===
-  //   boxRef.value.clientHeight
-  // ) {
-  //   isWheel.value = false; // 已经滚动到底部，无需继续滚动
-  // }
-  if (isWheel.value) return;
-  chatRef.value.scrollIntoView({ behavior: "smooth", block: "end" });
-  // 请求下一帧动画
-  requestAnimationFrame(autoScroll);
-}
-
-const handleScroll = () => {
-  console.log("scroll");
-  if (
-    boxRef.value.scrollHeight - boxRef.value.scrollTop ===
-    boxRef.value.clientHeight
-  ) {
-    // isWheel.value = false; // 已经滚动到底部，无需继续滚动
-    isWheel.value = false;
-
-    console.log("到底了");
-  } else {
-    console.log("没有到底");
-    isWheel.value = true;
-  }
-};
-
-// 启动自动滚动
-onMounted(() => {
-  autoScroll();
-});
 </script>
 
 <template>
   <div class="chat">
     <div class="main">
-      <div ref="boxRef" @wheel="handleScroll" class="chat-box">
+      <div ref="boxRef" class="chat-box">
         <div ref="chatRef">
           <Message v-for="item in messageHistoryList" :message="item"></Message>
         </div>
@@ -90,7 +78,6 @@ onMounted(() => {
     height: 100%;
     width: 60%;
     margin: 0 auto;
-    // background: pink;
 
     .input {
       min-height: 60px;

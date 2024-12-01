@@ -3,8 +3,10 @@ import axios from "axios";
 import { type Message, type FileInfo } from "@/type";
 import OpenAI from "openai";
 
+// 
+// sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9
 const client = new OpenAI({
-  apiKey: "sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9",
+  apiKey: "w6k20TO8YooIEKMH2lHDcn8nFBa4z2Rabb09UXTb1jmdq37fe14j",
   baseURL: "https://api.moonshot.cn/v1",
   dangerouslyAllowBrowser: true,
 });
@@ -36,6 +38,8 @@ const generateLoading = ref(false);
 const selectArticle = ref(0);
 const digaoText = ref("");
 
+//3  fastgpt-qDxClbMzQYZCR0QcwusKFmGNHvKfGtI5pDjK4uHEkSMsFTr89f4kc'
+// fastgpt-sk-q1Ms3FRgsg1SwxaH8Z7t0DZ0mc9kIncoGqqmCcmab4w2hjS9
 export const useKimi = () => {
   // 我们将用户最新的问题构造成一个 message（role=user），并添加到 messages 的尾部
 
@@ -49,7 +53,7 @@ export const useKimi = () => {
       headers: {
         "Content-Type": "application/json",
         Authorization:
-          "Bearer fastgpt-qDxClbMzQYZCR0QcwusKFmGNHvKfGtI5pDjK4uHEkSMsFTr89f4kc",
+          "Bearer fastgpt-hfnErSFSB8lR6ApYRx8jBbIW7I7HU94PWUjq71jZDLGG8XdcUVKCQw",
       },
       body: JSON.stringify({
         chatId: new Date().getTime().toString(),
@@ -63,9 +67,16 @@ export const useKimi = () => {
         ],
       }),
     }).then(async (response: any) => {
+      console.log("response",response)
+
+      // const res = {
+      //   role: "assistant",
+      //   content: ""
+      // } as any
+
       messageHistoryList.value.push({
-        role: "assistant",
-        content: "",
+                role: "assistant",
+        content: ""
       });
 
       const res = messageHistoryList.value[messageHistoryList.value.length - 1];
@@ -74,6 +85,8 @@ export const useKimi = () => {
         .getReader();
       while (true) {
         var { value, done } = await reader.read();
+
+        console.log('分会结果',value)
         if (done) break;
         const objects = value
           .split("\n")

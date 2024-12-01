@@ -31,11 +31,11 @@ const scrollElement = document.documentElement;
           editorId="preview-only"
           :modelValue="message.content"
         />
-        <MdCatalog
+        <!-- <MdCatalog
           v-if="message.role !== 'user'"
           editorId="preview-only"
           :scrollElement="scrollElement"
-        />
+        /> -->
       </div>
     </div>
   </div>
